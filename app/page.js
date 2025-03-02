@@ -1,101 +1,84 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [currentState, setCurrentState] = useState("");
+  const [futureGoal, setFutureGoal] = useState("");
+  const [response, setResponse] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const fetchFutureLetter = async () => {
+    setError("");
+    setResponse(null);
+    setLoading(true); // 🔹 ボタンを押したら「作成中...」表示
+
+    if (currentState.trim() === "" || futureGoal.trim() === "") {
+      setError("しっかりとなりたい自分を入力してください。");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/getFutureLetter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentState, futureGoal }),
+      });
+
+      const data = await res.json();
+      setResponse(data);
+    } catch (error) {
+      setError("エラーが発生しました。もう一度お試しください。");
+    } finally {
+      setLoading(false); // 🔹 手紙の作成が終わったら「作成中...」を消す
+    }
+  };
+
+  return (
+    <div className="p-8 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4 text-center">📨 My Future Letter</h1>
+
+      <label className="block text-lg font-semibold">現在の状況</label>
+      <textarea
+        className="w-full p-2 border rounded mb-4"
+        rows="3"
+        placeholder="今の自分の状況を入力..."
+        value={currentState}
+        onChange={(e) => setCurrentState(e.target.value)}
+      ></textarea>
+
+      <label className="block text-lg font-semibold">未来の方向性・なりたい自分</label>
+      <textarea
+        className="w-full p-2 border rounded mb-4"
+        rows="3"
+        placeholder="理想の未来やなりたい姿を入力..."
+        value={futureGoal}
+        onChange={(e) => setFutureGoal(e.target.value)}
+      ></textarea>
+
+      {/* 🔹 ボタンの hover でカーソルを変える */}
+      <button
+        onClick={fetchFutureLetter}
+        className="bg-blue-500 text-white px-4 py-2 rounded w-full hover:bg-blue-600 cursor-pointer"
+        style={{ cursor: "pointer" }}
+        disabled={loading}
+      >
+        {loading ? "作成中..." : "未来の自分から手紙をもらう ✉️"}
+      </button>
+
+      {error && <p className="text-red-500 mt-4">{error}</p>}
+
+      {/* 🔹 手紙の作成中のメッセージ */}
+      {loading && <p className="text-gray-500 mt-4">手紙を作成中です... 📜</p>}
+
+      {/* 🔹 未来の手紙を表示 */}
+      {response && (
+        <div className="mt-4 p-4 border rounded bg-gray-100 max-h-60 overflow-y-auto">
+          <h2 className="text-lg font-semibold">未来のあなたからの手紙 💌</h2>
+          <p className="whitespace-pre-wrap">{response.letter}</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      )}
     </div>
   );
 }
