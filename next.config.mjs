@@ -4,6 +4,7 @@ const nextConfig = {
     experimental: {
       appDir: true,
     },
+    output: "export", // 追加
   };
   
   export default nextConfig;
