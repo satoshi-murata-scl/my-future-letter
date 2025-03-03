@@ -1,11 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Home() {
   const [currentSituation, setCurrentSituation] = useState("");
   const [futureGoals, setFutureGoals] = useState("");
   const [letter, setLetter] = useState(""); // 手紙の内容
   const [loading, setLoading] = useState(false); // ロード中の状態
+  const letterRef = useRef(null); // スクロール用の参照
 
   async function fetchLetter() {
     setLetter(""); // 手紙をクリア
@@ -24,10 +25,17 @@ export default function Home() {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      result += decoder.decode(value, { stream: true });
+      const chunk = decoder.decode(value, { stream: true });
+      result += chunk;
 
-      // **改行を適切に反映し、リアルタイム表示**
       setLetter(result.replace(/\n\n/g, "\n\n"));
+
+      // ✅ 自動スクロール処理を追加
+      setTimeout(() => {
+        if (letterRef.current) {
+          letterRef.current.scrollTop = letterRef.current.scrollHeight;
+        }
+      }, 100);
     }
 
     setLoading(false); // ロード状態をOFF
@@ -59,10 +67,14 @@ export default function Home() {
         {loading ? "作成中..." : "未来からの手紙を受け取る"}
       </button>
 
-      {/* **✅ 出力エリアをスクロール可能にする修正** */}
-      <div className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[500px] overflow-y-auto">
-        {loading ? <p>手紙を作成中...</p> : <p style={{ whiteSpace: "pre-line" }}>{letter}</p>}
-      </div>
+      {/* ✅ 出力エリアをスクロール可能に */}
+      <textarea
+        ref={letterRef}
+        className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[500px] overflow-y-auto"
+        style={{ whiteSpace: "pre-line" }}
+      >
+        {loading ? <p>手紙を作成中...</p> : <p>{letter}</p>}
+      </textarea>
     </main>
   );
 }
