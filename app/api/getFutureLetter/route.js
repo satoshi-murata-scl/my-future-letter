@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// OpenAI API のタイムアウトを 15秒 に設定
-const TIMEOUT = 15000;
+// タイムアウトを 15 秒に設定
+const TIMEOUT = 15000; 
 
 export async function POST(req) {
   console.log("📩 API に POST リクエストが届きました！");
@@ -23,31 +23,22 @@ export async function POST(req) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    // `AbortController` を使って 15 秒以上かかるリクエストを強制終了
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
+    // ⏳ `Promise.race()` を使って 15 秒以上かかる場合はタイムアウト
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("OpenAI API request timeout")), TIMEOUT)
+    );
 
-    let response;
-    try {
-      response = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [
-          { role: "system", content: "あなたは未来の自分として励ましの手紙を書くAIです。" },
-          { role: "user", content: `現在の状況: ${currentSituation}\n未来の目標: ${futureGoals}` },
-        ],
-        max_tokens: 800, // 応答を短縮し高速化
-        temperature: 0.7, // 高速化のため適度に制限
-        signal: controller.signal, // タイムアウト制御
-      });
-    } catch (error) {
-      if (error.name === "AbortError") {
-        console.error("❌ OpenAI API のリクエストがタイムアウトしました！");
-        return NextResponse.json({ message: "AI の応答が遅いため、処理を中断しました。もう一度お試しください。" }, { status: 504 });
-      }
-      throw error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    const openaiPromise = openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "あなたは未来の自分として励ましの手紙を書くAIです。" },
+        { role: "user", content: `現在の状況: ${currentSituation}\n未来の目標: ${futureGoals}` },
+      ],
+      max_tokens: 800, // 応答を短縮し高速化
+      temperature: 0.7, // 高速化のため適度に制限
+    });
+
+    const response = await Promise.race([openaiPromise, timeoutPromise]);
 
     console.log("✅ OpenAI からの応答:", response);
 
@@ -61,7 +52,6 @@ export async function POST(req) {
     return NextResponse.json({ letter }, { status: 200 });
 
   } catch (error) {
-    console.error("❌ APIエラー:", error);
-    return NextResponse.json({ message: "エラーが発生しました。", error: error.message }, { status: 500 });
-  }
-}
+    console.error("❌ APIエラー:", error.message);
+    if (error.message.includes("timeout")) {
+      return NextResponse.j
