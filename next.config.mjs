@@ -4,6 +4,7 @@ const nextConfig = {
     experimental: {
       appDir: true,
     },
+    trailingSlash: true, // 追加
   };
   
   export default nextConfig;
