@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
-    trailingSlash: true,
-    output: "export", // `next export` に対応する設定
+    trailingSlash: false, // ✅ API のデプロイを正しくするため false にする
+    output: "standalone", // ✅ API ルートをデプロイするため standalone にする
   };
   
   export default nextConfig;
