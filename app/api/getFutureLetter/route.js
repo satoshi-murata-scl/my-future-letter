@@ -5,9 +5,9 @@ export async function POST(req) {
   console.log("📩 API にリクエストが届きました！");
 
   try {
-    const { currentState, futureGoal } = await req.json();
+    const { currentSituation, futureGoals } = await req.json();
 
-    if (!currentState || !futureGoal) {
+    if (!currentSituation || !futureGoals) {
       return NextResponse.json({ message: "しっかりとなりたい自分を入力してください。" }, { status: 400 });
     }
 
@@ -15,11 +15,15 @@ export async function POST(req) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
+    console.log("🚀 OpenAI API にリクエスト送信中...");
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         { role: "system", content: "あなたは未来の自分として励ましの手紙を書くAIです。" },
-        { role: "user", content: `
+        { 
+          role: "user", 
+          content: `
           【手紙の目的】  
           あなたは「未来の自分」として、「現在の自分」に向けて手紙を書いてください。  
           未来の自分は、目標を達成し、成功を掴んでいる状態です。  
@@ -33,7 +37,7 @@ export async function POST(req) {
           - もし迷っていたら、優しく背中を押してあげる  
           - 「未来の自分ならこうした」と具体的なアドバイスを入れる  
           - 最後に「これからも頑張れ！」とポジティブなエールで締めくくる  
-
+          
           【手紙のフォーマット】  
           ---
           『未来の自分からの手紙』
@@ -41,8 +45,8 @@ export async function POST(req) {
           やあ、〇〇（今の自分の名前）！  
           未来の君から、君へ手紙を書いているよ。  
           
-          今、君は「${currentState}」という状況にいるね。  
-          でも大丈夫、未来の君は「${futureGoal}」を叶えているよ。  
+          今、君は「${currentSituation}」という状況にいるね。  
+          でも大丈夫、未来の君は「${futureGoals}」を叶えているよ。  
           
           今の君は、不安もあるかもしれない。時にはくじけそうになることもあるだろう。  
           でもね、その努力は絶対に報われる。未来の僕が証明しているよ。  
@@ -61,12 +65,15 @@ export async function POST(req) {
           これからも頑張れ！  
           君なら大丈夫！  
           ---
-        ` }
+        ` 
+        }
       ],
-      max_tokens: 1000, // 🔹 長文でもしっかり表示されるようにする
+      max_tokens: 1500, // 🔹 長文でもしっかり表示されるようにする
     });
 
     const letter = response.choices[0].message.content.trim();
+
+    console.log("✅ OpenAI からの応答:", letter);
 
     return NextResponse.json({ letter }, { status: 200 });
   } catch (error) {
