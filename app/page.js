@@ -59,7 +59,8 @@ export default function Home() {
         {loading ? "作成中..." : "未来からの手紙を受け取る"}
       </button>
 
-      <div className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[500px] overflow-auto">
+      {/* **✅ 出力エリアをスクロール可能にする修正** */}
+      <div className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[500px] overflow-y-auto">
         {loading ? <p>手紙を作成中...</p> : <p style={{ whiteSpace: "pre-line" }}>{letter}</p>}
       </div>
     </main>
