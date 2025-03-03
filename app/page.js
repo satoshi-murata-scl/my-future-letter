@@ -25,7 +25,9 @@ export default function Home() {
       const { done, value } = await reader.read();
       if (done) break;
       result += decoder.decode(value, { stream: true });
-      setLetter(result); // リアルタイム更新
+
+      // **改行を適切に反映し、リアルタイム表示**
+      setLetter(result.replace(/\n\n/g, "\n\n"));
     }
 
     setLoading(false); // ロード状態をOFF
@@ -36,14 +38,14 @@ export default function Home() {
       <h1 className="text-2xl font-bold mb-4">未来からの手紙</h1>
 
       <textarea
-        className="w-full max-w-md p-2 border rounded mb-2"
+        className="w-full max-w-3xl p-3 border rounded mb-2"
         placeholder="現在の状況を入力してください"
         value={currentSituation}
         onChange={(e) => setCurrentSituation(e.target.value)}
       />
 
       <textarea
-        className="w-full max-w-md p-2 border rounded mb-4"
+        className="w-full max-w-3xl p-3 border rounded mb-4"
         placeholder="未来の目標を入力してください"
         value={futureGoals}
         onChange={(e) => setFutureGoals(e.target.value)}
@@ -57,8 +59,8 @@ export default function Home() {
         {loading ? "作成中..." : "未来からの手紙を受け取る"}
       </button>
 
-      <div className="w-full max-w-md mt-4 p-4 border rounded bg-gray-100 min-h-[200px] overflow-auto">
-        {loading ? <p>手紙を作成中...</p> : <p>{letter}</p>}
+      <div className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[500px] overflow-auto">
+        {loading ? <p>手紙を作成中...</p> : <p style={{ whiteSpace: "pre-line" }}>{letter}</p>}
       </div>
     </main>
   );
