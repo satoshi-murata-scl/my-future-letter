@@ -54,4 +54,8 @@ export async function POST(req) {
   } catch (error) {
     console.error("❌ APIエラー:", error.message);
     if (error.message.includes("timeout")) {
-      return NextResponse.j
+      return NextResponse.json({ message: "AI の応答が遅いため、処理を中断しました。もう一度お試しください。" }, { status: 504 });
+    }
+    return NextResponse.json({ message: "エラーが発生しました。", error: error.message }, { status: 500 });
+  }
+}
