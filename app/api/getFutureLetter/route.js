@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
+// タイムアウトを設定（デフォルトは 10 秒なので短縮する）
+const TIMEOUT = 8000; // 8秒以内にリクエストを終了
+
 export async function POST(req) {
   console.log("📩 API に POST リクエストが届きました！");
 
@@ -13,11 +16,12 @@ export async function POST(req) {
       return NextResponse.json({ message: "しっかりとなりたい自分を入力してください。" }, { status: 400 });
     }
 
+    console.log("🚀 OpenAI API にリクエスト送信中...");
+
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
+      timeout: TIMEOUT, // タイムアウトを設定
     });
-
-    console.log("🚀 OpenAI API にリクエスト送信中...");
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
@@ -25,7 +29,7 @@ export async function POST(req) {
         { role: "system", content: "あなたは未来の自分として励ましの手紙を書くAIです。" },
         { role: "user", content: `現在の状況: ${currentSituation}\n未来の目標: ${futureGoals}` },
       ],
-      max_tokens: 1500,
+      max_tokens: 1000, // 生成するテキストの最大長を短縮
     });
 
     console.log("✅ OpenAI からの応答:", response);
@@ -42,9 +46,4 @@ export async function POST(req) {
     console.error("❌ APIエラー:", error);
     return NextResponse.json({ message: "エラーが発生しました。", error: error.message }, { status: 500 });
   }
-}
-
-// ✅ GET リクエストを許可（テスト用）
-export async function GET() {
-  return NextResponse.json({ message: "API は正常に動作しています。" });
 }
