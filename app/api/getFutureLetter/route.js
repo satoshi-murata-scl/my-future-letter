@@ -17,7 +17,7 @@ export async function POST(req) {
       return NextResponse.json({ message: "しっかりとなりたい自分を入力してください。" }, { status: 400 });
     }
 
-    console.log("🚀 OpenAI API にリクエスト送信中...");
+    console.log("🚀 OpenAI API にストリームリクエスト送信中...");
 
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo",
@@ -73,20 +73,30 @@ export async function POST(req) {
           ---
         ` },
       ],
-      max_tokens: 800, // 🔹 500 → 800 に増やして途中で切れないようにする
+      max_tokens: 600, 
       temperature: 0.7,
+      stream: true, // 🔹 ストリーミングモードを有効化
     });
 
-    console.log("✅ OpenAI からの応答:", response);
+    console.log("✅ OpenAI からの応答をストリーミング中...");
 
-    if (!response || !response.choices || response.choices.length === 0) {
-      return NextResponse.json({ message: "AIの生成中にエラーが発生しました。" }, { status: 500 });
-    }
+    // ストリーミングデータをクライアントに送る
+    const stream = new ReadableStream({
+      async start(controller) {
+        for await (const chunk of response) {
+          const text = chunk.choices[0]?.delta?.content || "";
+          controller.enqueue(text);
+        }
+        controller.close();
+      },
+    });
 
-    // 文章を1行ずつ分けて、少しずつ表示させるための配列に変換
-    const letter = response.choices[0].message.content.trim().split("\n\n");
-
-    return NextResponse.json({ letter }, { status: 200 });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
 
   } catch (error) {
     console.error("❌ APIエラー:", error);
