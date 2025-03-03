@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// タイムアウトを設定（デフォルトは 10 秒なので短縮する）
-const TIMEOUT = 8000; // 8秒以内にリクエストを終了
+// タイムアウト設定（Vercel の最大値 20秒）
+const TIMEOUT = 19000; // 19秒（20秒を超えると Vercel 側で強制終了される）
 
 export async function POST(req) {
   console.log("📩 API に POST リクエストが届きました！");
@@ -20,7 +20,7 @@ export async function POST(req) {
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      timeout: TIMEOUT, // タイムアウトを設定
+      timeout: TIMEOUT, // タイムアウトを 19秒 に設定
     });
 
     const response = await openai.chat.completions.create({
@@ -29,7 +29,7 @@ export async function POST(req) {
         { role: "system", content: "あなたは未来の自分として励ましの手紙を書くAIです。" },
         { role: "user", content: `現在の状況: ${currentSituation}\n未来の目標: ${futureGoals}` },
       ],
-      max_tokens: 1000, // 生成するテキストの最大長を短縮
+      max_tokens: 1000, // 生成するテキストの長さを調整
     });
 
     console.log("✅ OpenAI からの応答:", response);
