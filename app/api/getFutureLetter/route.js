@@ -29,12 +29,12 @@ export async function POST(req) {
     );
 
     const openaiPromise = openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-turbo",
       messages: [
         { role: "system", content: "あなたは未来の自分として励ましの手紙を書くAIです。" },
         { role: "user", content: `現在の状況: ${currentSituation}\n未来の目標: ${futureGoals}` },
       ],
-      max_tokens: 800, // 応答を短縮し高速化
+      max_tokens: 500, // 応答を短縮し高速化
       temperature: 0.7, // 高速化のため適度に制限
     });
 
