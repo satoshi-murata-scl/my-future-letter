@@ -8,11 +8,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false); // ロード中の状態
   const letterRef = useRef(null); // スクロール用の参照
 
+  // ✅ 手紙が更新されるたびにスクロールする
   useEffect(() => {
     if (letterRef.current) {
       letterRef.current.scrollTop = letterRef.current.scrollHeight;
     }
-  }, [letter]); // ✅ 手紙の内容が変わるたびにスクロール
+  }, [letter]);
 
   async function fetchLetter() {
     setLetter(""); // 手紙をクリア
@@ -34,9 +35,12 @@ export default function Home() {
       const chunk = decoder.decode(value, { stream: true });
       result += chunk;
 
-      setLetter((prev) => prev + chunk); // ✅ 文字を追加して UI に反映
+      // ✅ **途中で止まらないように、リアルタイムで更新**
+      setLetter((prev) => prev + chunk);
     }
 
+    // ✅ **最終的に全文をしっかり反映**
+    setLetter(result);
     setLoading(false); // ロード状態をOFF
   }
 
@@ -66,10 +70,10 @@ export default function Home() {
         {loading ? "作成中..." : "未来からの手紙を受け取る"}
       </button>
 
-      {/* ✅ 出力エリアをスクロール可能にし、UIに確実に反映 */}
+      {/* ✅ **出力エリアをスクロール可能にし、UIに確実に反映** */}
       <div
         ref={letterRef}
-        className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[500px] overflow-y-auto"
+        className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[700px] overflow-y-auto"
         style={{ whiteSpace: "pre-line" }}
       >
         {loading ? <p>手紙を作成中...</p> : <p>{letter}</p>}
