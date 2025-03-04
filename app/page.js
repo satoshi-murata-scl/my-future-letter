@@ -8,7 +8,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false); // ロード中の状態
   const letterRef = useRef(null); // スクロール用の参照
 
-  // ✅ 手紙が更新されるたびにスクロールする
+  // ✅ 手紙の内容が変わるたびにスクロールする
   useEffect(() => {
     if (letterRef.current) {
       letterRef.current.scrollTop = letterRef.current.scrollHeight;
@@ -28,10 +28,14 @@ export default function Home() {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let result = "";
+    let isDone = false; // ✅ 最後の `done` 判定を厳密に処理
 
-    while (true) {
+    while (!isDone) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        isDone = true;
+        break;
+      }
       const chunk = decoder.decode(value, { stream: true });
       result += chunk;
 
@@ -39,7 +43,7 @@ export default function Home() {
       setLetter((prev) => prev + chunk);
     }
 
-    // ✅ **最終的に全文をしっかり反映**
+    // ✅ **最後のデータをしっかり反映**
     setLetter(result);
     setLoading(false); // ロード状態をOFF
   }
