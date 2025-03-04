@@ -7,6 +7,7 @@ export default function Home() {
   const [letter, setLetter] = useState(""); // 手紙の内容
   const [loading, setLoading] = useState(false); // ロード中の状態
   const letterRef = useRef(null); // スクロール用の参照
+  const fullLetter = useRef(""); // ✅ 最後までの文章を保存する変数
 
   // ✅ 手紙の内容が変わるたびにスクロールする
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function Home() {
 
   async function fetchLetter() {
     setLetter(""); // 手紙をクリア
+    fullLetter.current = ""; // ✅ フルの文章をリセット
     setLoading(true); // ロード状態をON
 
     const response = await fetch("/api/getFutureLetter", {
@@ -27,7 +29,6 @@ export default function Home() {
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
-    let result = "";
     let isDone = false; // ✅ 最後の `done` 判定を厳密に処理
 
     while (!isDone) {
@@ -37,14 +38,21 @@ export default function Home() {
         break;
       }
       const chunk = decoder.decode(value, { stream: true });
-      result += chunk;
+      fullLetter.current += chunk;
 
-      // ✅ **途中で止まらないように、リアルタイムで更新**
+      // ✅ **リアルタイムでデータを反映**
       setLetter((prev) => prev + chunk);
+
+      // ✅ **100ms ごとにスクロール処理**
+      setTimeout(() => {
+        if (letterRef.current) {
+          letterRef.current.scrollTop = letterRef.current.scrollHeight;
+        }
+      }, 100);
     }
 
     // ✅ **最後のデータをしっかり反映**
-    setLetter(result);
+    setLetter(fullLetter.current);
     setLoading(false); // ロード状態をOFF
   }
 
@@ -80,7 +88,7 @@ export default function Home() {
         className="w-full max-w-3xl mt-4 p-4 border rounded bg-gray-100 min-h-[300px] max-h-[700px] overflow-y-auto"
         style={{ whiteSpace: "pre-line" }}
       >
-        {loading ? <p>手紙を作成中...</p> : <p>{letter}</p>}
+        {loading ? <p>手紙を書いています...</p> : <p>{letter}</p>}
       </div>
     </main>
   );
